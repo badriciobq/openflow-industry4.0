@@ -87,6 +87,7 @@ OBJS = \
     $O/apps/RFIDGenericApp.o \
     $O/apps/SensorApp.o \
     $O/apps/ServerApp.o \
+    $O/apps/SupplierApp.o \
     $O/ctrlApps/Forwarding.o \
     $O/ctrlApps/Hub.o \
     $O/ctrlApps/Switch.o \
@@ -418,6 +419,24 @@ $O/apps/ServerApp.o: apps/ServerApp.cc \
 	$(INET_PROJ)/src/transport/contract/TCPSocket.h \
 	apps/ServerApp.h \
 	factory/nodeFactory.h
+$O/apps/SupplierApp.o: apps/SupplierApp.cc \
+	$(INET_PROJ)/src/applications/tcpapp/GenericAppMsg_m.h \
+	$(INET_PROJ)/src/applications/tcpapp/TCPAppBase.h \
+	$(INET_PROJ)/src/base/Compat.h \
+	$(INET_PROJ)/src/base/ILifecycle.h \
+	$(INET_PROJ)/src/base/INETDefs.h \
+	$(INET_PROJ)/src/base/LifecycleOperation.h \
+	$(INET_PROJ)/src/base/ModuleAccess.h \
+	$(INET_PROJ)/src/base/NodeOperations.h \
+	$(INET_PROJ)/src/networklayer/contract/IPv4Address.h \
+	$(INET_PROJ)/src/networklayer/contract/IPv6Address.h \
+	$(INET_PROJ)/src/networklayer/contract/IPvXAddress.h \
+	$(INET_PROJ)/src/status/NodeStatus.h \
+	$(INET_PROJ)/src/transport/contract/TCPCommand_m.h \
+	$(INET_PROJ)/src/transport/contract/TCPSocket.h \
+	apps/SupplierApp.h \
+	apps/TypeMessages.h \
+	messages/RFID_Message_m.h
 $O/ctrlApps/Forwarding.o: ctrlApps/Forwarding.cc \
 	$(INET_PROJ)/src/base/Compat.h \
 	$(INET_PROJ)/src/base/ILifecycle.h \

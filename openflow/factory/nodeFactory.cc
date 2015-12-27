@@ -46,7 +46,7 @@ void NodeFactory::initialize(int stage)
     if(stage != 1)
         return;
 
-    timeoutMsg = new cMessage("factory_node_timer");
+    timeoutMsg = NULL;
 }
 
 void NodeFactory::handleMessage(cMessage *msg)
@@ -60,6 +60,11 @@ void NodeFactory::handleMessage(cMessage *msg)
         {
             createNode();
             scheduleAt(simTime() + intervalTime, timeoutMsg);
+        }
+        else
+        {
+            cancelAndDelete(timeoutMsg);
+            timeoutMsg = NULL;
         }
     }
 }
@@ -89,6 +94,8 @@ void NodeFactory::createNode()
 
     // Incementa a demanda de produção de nós
     m_demmand--;
+
+    std::cout << "Falta Produzir: " << m_demmand << endl;
 }
 
 void NodeFactory::deleteNode(long id)
@@ -120,6 +127,12 @@ void NodeFactory::setDemand(int demmand)
     Enter_Method_Silent();
 
     m_demmand += demmand;
-    scheduleAt(simTime() + intervalTime, timeoutMsg);
+
+    if(!timeoutMsg)
+    {
+        timeoutMsg = new cMessage("factory_node_timer");
+        scheduleAt(simTime() + intervalTime, timeoutMsg);
+    }
+
 }
 

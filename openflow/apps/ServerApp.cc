@@ -50,6 +50,10 @@ simsignal_t ServerApp::rcvdPkSignal = registerSignal("rcvdPk");
 simsignal_t ServerApp::sentPkSignal = registerSignal("sentPk");
 
 
+simsignal_t ServerApp::prodDoneSignal = registerSignal("prodDone");
+simsignal_t ServerApp::prodProblemSignal = registerSignal("prodProblem");
+simsignal_t ServerApp::prodStartsSignal = registerSignal("prodStarts");
+
 void ServerApp::initialize(int stage)
 {
     cSimpleModule::initialize(stage);
@@ -58,6 +62,7 @@ void ServerApp::initialize(int stage)
     {
         delay = par("replyDelay");
         maxMsgDelay = 0;
+        product_inventory = 0;
 
         //statistics
         msgsRcvd = msgsSent = bytesRcvd = bytesSent = 0;
@@ -214,6 +219,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
         case SENSOR_PRODUCT:
         {
             production_starts.insert(msg->getTag_id());
+
+            emit(prodStartsSignal, msg);
+
             break;
         }
         case SENSOR_WEIGTH:
@@ -221,7 +229,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
             double weigth = msg->getData();
 
             // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
-            if(weigth > 0.9)
+            if(weigth < 0.1)
             {
                 // Insere o elemento entre os elementos com deifeito
                 production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
@@ -232,6 +240,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
                 // Destroy os produtos com defeito de peso
                 Factory->deleteNode(msg->getTag_id());
+                Factory->setDemand(1);
+
+                emit(prodProblemSignal, msg);
             }
             break;
         }
@@ -240,7 +251,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
             double size = msg->getData();
 
             // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
-            if(size > 0.9)
+            if(size < 0.1)
             {
                 // Insere o elemento entre os elementos com deifeito
                 production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
@@ -251,6 +262,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
                 // Destroy os produtos com defeito de tamanho
                 Factory->deleteNode(msg->getTag_id());
+                Factory->setDemand(1);
+
+                emit(prodProblemSignal, msg);
 
             }
             else
@@ -264,6 +278,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
                 // Destroy os produtos que foram fabriados com sucesso
                 Factory->deleteNode(msg->getTag_id());
+
+                emit(prodDoneSignal, msg);
             }
 
             break;
@@ -278,11 +294,5 @@ void ServerApp::process_message(GenericAppMsg *msg)
             EV << "sensor desconhecido: " << msg->getSensor() << endl;
             break;
     }
-
-    EV << endl;
-    EV << "PRODUZINDO: " << production_starts.size() << endl;
-    EV << "DEFEITUOSOS: " << production_defect.size() << endl;
-    EV << "CONCLUÍDOS: " << production_done.size() <<endl;
-    EV << endl;
 
 }

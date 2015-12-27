@@ -46,6 +46,10 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
     static simsignal_t rcvdPkSignal;
     static simsignal_t sentPkSignal;
 
+    static simsignal_t prodDoneSignal;
+    static simsignal_t prodProblemSignal;
+    static simsignal_t prodStartsSignal;
+
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)
     { Enter_Method_Silent(); throw cRuntimeError("Unsupported lifecycle operation '%s'", operation->getClassName()); return true; }
@@ -54,7 +58,8 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
         SENSOR_PRODUCT = 0,
         SENSOR_WEIGTH,
         SENSOR_SIZE,
-        CLIENT
+        CLIENT,
+        SERVER
     };
 
   protected:
@@ -71,6 +76,7 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
   private:
     virtual void process_message(GenericAppMsg *msg);
     NodeFactory *Factory;
+    int product_inventory;
 
     std::set<int> production_starts; // Produtos que entraram na linha de produção
     std::set<int> production_done; // Produtos produzidos com sucesso

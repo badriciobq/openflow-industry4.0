@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
+  <inputs>
+    <inputs name="/openflow/scenarios/results/Industry.ini/Industry.ini-*.vec"/>
+    <inputs name="/openflow/scenarios/results/Industry.ini/Industry.ini-*.sca"/>
+  </inputs>
+  <datasets>
+    <datasets name="EndToEnd">
+      <items xsi:type="scave:Add" filterPattern="name(endToEndDelay:vector) " type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="Atraso Fim a Fim" lineNameFormat="">
+        <properties name="Graph.Title" value="Atraso fim a fim"/>
+        <properties name="X.Axis.Title" value="tempo (s)"/>
+        <properties name="Y.Axis.Title" value="Atraso (s)"/>
+        <properties name="Y.Axis.Log" value="true"/>
+        <properties name="Legend.Display" value="true"/>
+        <properties name="Legend.Border" value="true"/>
+        <properties name="Legend.Position" value="Inside"/>
+        <properties name="Line.Name/industry4.client.tcpApp[0]" value="Client"/>
+        <properties name="Line.Name/industry4.RFIDProduct.tcpApp[0]" value="RFIDProduct"/>
+        <properties name="Line.Name/industry4.RFIDSize.tcpApp[0]" value="RFIDSize"/>
+        <properties name="Line.Name/industry4.RFIDWeigth.tcpApp[0]" value="RFIDWeigth"/>
+        <properties name="Line.Name/industry4.server.tcpApp[0]" value="Server"/>
+      </items>
+    </datasets>
+    <datasets name="Enviadas">
+      <items xsi:type="scave:Add" filterPattern="&quot;sentPk:vector(packetBytes)&quot;" type="VECTOR"/>
+      <items xsi:type="scave:Discard" filterPattern="&quot;sentPk:vector(packetBytes)&quot; AND module(*client*)  " type="VECTOR"/>
+      <items xsi:type="scave:Group" name="">
+        <items xsi:type="scave:Apply" operation="mean"/>
+        <items xsi:type="scave:LineChart" name="Send (Bytes)" lineNameFormat="">
+          <properties name="Graph.Title" value="Média de Pacotes Enviados (Bytes)"/>
+          <properties name="X.Axis.Title" value="Tempo (s)"/>
+          <properties name="Y.Axis.Title" value="Bytes"/>
+          <properties name="Y.Axis.Log" value="true"/>
+          <properties name="Legend.Display" value="true"/>
+          <properties name="Legend.Border" value="true"/>
+          <properties name="Legend.Position" value="Inside"/>
+          <properties name="Line.Name/industry4.client.tcpApp[0]" value="Client"/>
+          <properties name="Line.Name/industry4.RFIDProduct.tcpApp[0]" value="RFIDProduct"/>
+          <properties name="Line.Name/industry4.RFIDSize.tcpApp[0]" value="RFIDSize"/>
+          <properties name="Line.Name/industry4.RFIDWeigth.tcpApp[0]" value="RFIDWeigth"/>
+          <properties name="Line.Name/industry4.server.tcpApp[0]" value="Server"/>
+          <properties name="Symbols.Size" value="2"/>
+        </items>
+      </items>
+    </datasets>
+    <datasets name="Recebidas">
+      <items xsi:type="scave:Add" filterPattern="&quot;rcvdPk:vector(packetBytes)&quot;" type="VECTOR"/>
+      <items xsi:type="scave:Discard" filterPattern="&quot;rcvdPk:vector(packetBytes)&quot; AND module(*client*) " type="VECTOR"/>
+      <items xsi:type="scave:Group" name="media">
+        <items xsi:type="scave:Apply" operation="mean"/>
+        <items xsi:type="scave:LineChart" name="rcvd (bytes)" lineNameFormat="">
+          <properties name="Graph.Title" value="Média de pacotes recebidos (Bites)"/>
+          <properties name="X.Axis.Title" value="Tempo (s)"/>
+          <properties name="Y.Axis.Title" value="Bytes"/>
+          <properties name="Y.Axis.Log" value="true"/>
+          <properties name="Legend.Display" value="true"/>
+          <properties name="Legend.Border" value="true"/>
+          <properties name="Legend.Position" value="Inside"/>
+          <properties name="Line.Name/industry4.RFIDProduct.tcpApp[0]" value="RFIDProduct"/>
+          <properties name="Line.Name/industry4.RFIDSize.tcpApp[0]" value="RFIDSize"/>
+          <properties name="Line.Name/industry4.RFIDWeigth.tcpApp[0]" value="RFIDWeigth"/>
+          <properties name="Line.Name/industry4.server.tcpApp[0]" value="Server"/>
+          <properties name="Symbols.Size" value="2"/>
+        </items>
+      </items>
+    </datasets>
+    <datasets name="Jitter">
+      <items xsi:type="scave:Add" filterPattern="endToEndDelay:vector" type="VECTOR"/>
+      <items xsi:type="scave:Apply" operation="difference"/>
+      <items xsi:type="scave:Apply" operation="mean"/>
+      <items xsi:type="scave:LineChart" name="Jitter" lineNameFormat="">
+        <properties name="Graph.Title" value="Jitter médio"/>
+        <properties name="X.Axis.Title" value="Tempo (s)"/>
+        <properties name="Y.Axis.Title" value="Variação do Atraso (s)"/>
+        <properties name="Y.Axis.Log" value="true"/>
+        <properties name="Legend.Display" value="true"/>
+        <properties name="Legend.Border" value="true"/>
+        <properties name="Legend.Position" value="Inside"/>
+        <properties name="Line.Name/industry4.client.tcpApp[0]" value="Client"/>
+        <properties name="Line.Name/industry4.RFIDProduct.tcpApp[0]" value="RFIDProduct"/>
+        <properties name="Line.Name/industry4.RFIDSize.tcpApp[0]" value="RFIDSize"/>
+        <properties name="Line.Name/industry4.RFIDWeigth.tcpApp[0]" value="RFIDWeigth"/>
+        <properties name="Line.Name/industry4.server.tcpApp[0]" value="Server"/>
+        <properties name="Symbols.Size" value="2"/>
+      </items>
+    </datasets>
+    <datasets name="MsgnsTotal">
+      <items xsi:type="scave:Add" filterPattern="&quot;sent *&quot;" type="VECTOR"/>
+      <items xsi:type="scave:Apply" operation="expression">
+        <params name="expression" value="y + yprev"/>
+      </items>
+      <items xsi:type="scave:LineChart" name="" lineNameFormat=""/>
+    </datasets>
+  </datasets>
+  <chartSheets>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.1 //@datasets/@datasets.1/@items.2/@items.1 //@datasets/@datasets.2/@items.2/@items.1 //@datasets/@datasets.3/@items.3 //@datasets/@datasets.4/@items.2"/>
+  </chartSheets>
+</scave:Analysis>

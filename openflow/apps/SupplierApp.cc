@@ -1,23 +1,23 @@
-#include "SensorApp.h"
+#include "SupplierApp.h"
 
 #include "NodeOperations.h"
 #include "ModuleAccess.h"
 #include "GenericAppMsg_m.h"
 
 
-Define_Module(SensorApp);
+Define_Module(SupplierApp);
 
-SensorApp::SensorApp()
+SupplierApp::SupplierApp()
 {
 
 }
 
-SensorApp::~SensorApp()
+SupplierApp::~SupplierApp()
 {
     cancelAndDelete(timeOutMess);
 }
 
-void SensorApp::initialize(int stage)
+void SupplierApp::initialize(int stage)
 {
     TCPAppBase::initialize(stage);
     if (stage == 0)
@@ -37,12 +37,12 @@ void SensorApp::initialize(int stage)
     }
 }
 
-bool SensorApp::isNodeUp()
+bool SupplierApp::isNodeUp()
 {
     return !nodeStatus || nodeStatus->getState() == NodeStatus::UP;
 }
 
-bool SensorApp::handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)
+bool SupplierApp::handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)
 {
     Enter_Method_Silent();
     if (dynamic_cast<NodeStartOperation *>(operation)) {
@@ -68,7 +68,7 @@ bool SensorApp::handleOperationStage(LifecycleOperation *operation, int stage, I
     return true;
 }
 
-void SensorApp::sendRequest()
+void SupplierApp::sendRequest()
 {
      long requestLength = par("requestLength");
      long replyLength = par("replyLength");
@@ -88,9 +88,7 @@ void SensorApp::sendRequest()
          if(value != -1)
          {
              msg->setTag_id( value );
-
-             double value = uniform(0,1);
-             msg->setData(value);
+             msg->setData(uniform(0,1));
 
              if(strcmp(getParentModule()->getName(), "RFIDProduct") == 0)
              {
@@ -110,7 +108,7 @@ void SensorApp::sendRequest()
      }
 }
 
-void SensorApp::handleTimer(cMessage *msg)
+void SupplierApp::handleTimer(cMessage *msg)
 {
     switch (msg->getKind())
     {
@@ -140,7 +138,7 @@ void SensorApp::handleTimer(cMessage *msg)
     }
 }
 
-void SensorApp::socketEstablished(int connId, void *ptr)
+void SupplierApp::socketEstablished(int connId, void *ptr)
 {
     TCPAppBase::socketEstablished(connId, ptr);
 
@@ -158,7 +156,7 @@ void SensorApp::socketEstablished(int connId, void *ptr)
     numRequestsToSend--;
 }
 
-void SensorApp::rescheduleTimer(simtime_t d, short int msgKind)
+void SupplierApp::rescheduleTimer(simtime_t d, short int msgKind)
 {
     if(timeOutMess)
     {
@@ -177,7 +175,7 @@ void SensorApp::rescheduleTimer(simtime_t d, short int msgKind)
     }
 }
 
-void SensorApp::socketDataArrived(int connId, void *ptr, cPacket *msg, bool urgent)
+void SupplierApp::socketDataArrived(int connId, void *ptr, cPacket *msg, bool urgent)
 {
     GenericAppMsg *appmsg = dynamic_cast<GenericAppMsg *>(msg);
 
@@ -212,7 +210,7 @@ void SensorApp::socketDataArrived(int connId, void *ptr, cPacket *msg, bool urge
     }
 }
 
-void SensorApp::socketClosed(int connId, void *ptr)
+void SupplierApp::socketClosed(int connId, void *ptr)
 {
     TCPAppBase::socketClosed(connId, ptr);
 
@@ -223,7 +221,7 @@ void SensorApp::socketClosed(int connId, void *ptr)
     isAnSession = false;
 }
 
-void SensorApp::socketFailure(int connId, void *ptr, int code)
+void SupplierApp::socketFailure(int connId, void *ptr, int code)
 {
     TCPAppBase::socketFailure(connId, ptr, code);
 
@@ -232,7 +230,7 @@ void SensorApp::socketFailure(int connId, void *ptr, int code)
 }
 
 
-void SensorApp::pushBuffer(int id)
+void SupplierApp::pushBuffer(int id)
 {
     Enter_Method_Silent("pushBuffer()");
 
@@ -262,7 +260,7 @@ void SensorApp::pushBuffer(int id)
     }
 }
 
-int SensorApp::popBuffer()
+int SupplierApp::popBuffer()
 {
     if( !isBufferEmpty() )
     {
@@ -277,7 +275,7 @@ int SensorApp::popBuffer()
     }
 }
 
-bool SensorApp::isBufferEmpty()
+bool SupplierApp::isBufferEmpty()
 {
     return m_buffer.empty();
 }

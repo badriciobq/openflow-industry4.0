@@ -105,9 +105,8 @@ void RFIDGenericApp::scheduleSelfMessage()
 
 void RFIDGenericApp::sendMessageDown(cMessage *msg)
 {
-    EV << "RFID [" << id << "]: Send My ID."<< endl;
     simtime_t delay_timer;
-    delay_timer = uniform(0, 0.01);
+    delay_timer = uniform(0, 0.001);
     sendDelayed(msg, delay_timer, "lowerLayerOut");
 }
 
