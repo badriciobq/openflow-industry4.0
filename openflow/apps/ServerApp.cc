@@ -387,85 +387,18 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
     case CLIENT:
     {
-        // TODO - Passar verificando se é preciso validar se o product_Demmand é mair do que zero
-
         // Quantidade de nós a produzer. Demanda do cliente.
         int value = msg->getData();
 
         product_demmand += value;
 
-        // Calcula o tamanho do estoque (estoque reserva + estoque das linhas de produção).
-        int inventory_line0 = lines_of_production[0].product_inventory - lines_of_production[0].product_demmand;
-        int inventory_line1 = lines_of_production[1].product_inventory - lines_of_production[1].product_demmand;
-
-        int aux_inventory = product_inventory + inventory_line0 + inventory_line1;
+        if(product_demmand == 0)
+            break;
 
         // Se a demanda for maior do que o estoque?
-        if(product_demmand > aux_inventory)
+        if(product_demmand > product_inventory)
         {
-            if(aux_inventory > 0)
-            {
-                // Demanda produção na linha zero quando existe estoque sobrando
-                if(inventory_line0 > 0)
-                {
-                    Factory->setDemand(inventory_line0, 0);
-                    lines_of_production[0].product_demmand += inventory_line0;
-                    product_demmand -= inventory_line0;
-                }
-
-                // Demanda produção na linha um quando existe estoque sobrando
-                if(inventory_line1 > 0)
-                {
-                    Factory->setDemand(inventory_line1, 1);
-                    lines_of_production[1].product_demmand += inventory_line1;
-                    product_demmand -= inventory_line1;
-                }
-
-                if(product_inventory > 0)
-                {
-                    if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
-                    {
-                        Factory->setDemand(product_inventory, 0);
-                        lines_of_production[0].product_demmand += product_inventory;
-                        lines_of_production[0].product_inventory += product_inventory;
-                    }
-                    else
-                    {
-                        Factory->setDemand(product_inventory, 1);
-                        lines_of_production[1].product_demmand += product_inventory;
-                        lines_of_production[1].product_inventory += product_inventory;
-                    }
-                    product_inventory -= product_inventory;
-                    product_demmand -= product_inventory;
-                }
-
-            }
-
-            // TODO - Solicitar do fornecedor estoque suficiente para atender a demanda do cliente
-            // Supplier.request.product_demmand - Pseudo-código
-        }
-        else
-        {
-            // Meu estoque total é maior do que a demanda
-            if(product_inventory >= product_demmand)
-            {
-                if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
-                {
-                    Factory->setDemand(product_demmand, 0);
-                    lines_of_production[0].product_demmand += product_demmand;
-                    lines_of_production[0].product_inventory += product_demmand;
-                }
-                else
-                {
-                    Factory->setDemand(product_demmand, 1);
-                    lines_of_production[1].product_demmand += product_demmand;
-                    lines_of_production[1].product_inventory += product_demmand;
-                }
-                product_inventory -= product_demmand;
-                product_demmand -= product_demmand;
-            }
-            // Meu estoque total é menor do que a demanda, tenho que usar o estoque das linhas de produção
-            else
+            if(product_inventory > 0)
             {
                 if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
                 {
@@ -479,43 +412,29 @@ void ServerApp::process_message(GenericAppMsg *msg)
                     lines_of_production[1].product_demmand += product_inventory;
                     lines_of_production[1].product_inventory += product_inventory;
                 }
-
                 product_inventory -= product_inventory;
                 product_demmand -= product_inventory;
-
-                if(product_demmand > 0)
-                {
-                    if(inventory_line0 > product_demmand)
-                    {
-                        Factory->setDemand(product_demmand, 0);
-                        lines_of_production[0].product_demmand += product_demmand;
-                        product_demmand -= product_demmand;
-                    }
-                    else
-                    {
-                        Factory->setDemand(inventory_line0, 0);
-                        lines_of_production[0].product_demmand += inventory_line0;
-                        product_demmand -= inventory_line0;
-                    }
-                }
-
-                if(product_demmand > 0)
-                {
-                    // Demanda produção na linha um quando existe estoque sobrando
-                    if(inventory_line1 > product_demmand)
-                    {
-                        Factory->setDemand(product_demmand, 1);
-                        lines_of_production[1].product_demmand += product_demmand;
-                        product_demmand -= product_demmand;
-                    }
-                    else
-                    {
-                        Factory->setDemand(inventory_line1, 1);
-                        lines_of_production[1].product_demmand += inventory_line1;
-                        product_demmand -= inventory_line1;
-                    }
-                }
             }
+
+            // TODO - Solicitar do fornecedor estoque suficiente para atender a demanda do cliente
+            // Supplier.request.product_demmand - Pseudo-código
+        }
+        else
+        {
+            if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
+            {
+                Factory->setDemand(product_demmand, 0);
+                lines_of_production[0].product_demmand += product_demmand;
+                lines_of_production[0].product_inventory += product_demmand;
+            }
+            else
+            {
+                Factory->setDemand(product_demmand, 1);
+                lines_of_production[1].product_demmand += product_demmand;
+                lines_of_production[1].product_inventory += product_demmand;
+            }
+            product_inventory -= product_demmand;
+            product_demmand -= product_demmand;
         }
 
         break;
