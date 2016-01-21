@@ -1,0 +1,5 @@
+#gitignore Files
+
+*.o
+*.vci
+*.vec
