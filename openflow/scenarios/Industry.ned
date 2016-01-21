@@ -88,17 +88,17 @@ network industry4
 
         // Linha de produção 2
 
-        RFIDWeigthP2: SensorNode {
+        RFIDWeigthP0: SensorNode {
             parameters:
                 @display("p=180,334;i=rfid_tag;is=vs");
         }
 
-        RFIDSizeP2: SensorNode {
+        RFIDSizeP0: SensorNode {
             parameters:
                 @display("p=95,334;i=rfid_tag;is=vs");
         }
 
-        RFIDProductP2: SensorNode {
+        RFIDProductP0: SensorNode {
             parameters:
                 @display("p=110,240;i=rfid_tag;is=vs");
         }
@@ -122,9 +122,9 @@ network industry4
         RFIDSize.ethg++ <--> ethernetWire <--> switch2.ethg++;
         RFIDProduct.ethg++ <--> ethernetWire <--> switch2.ethg++;
 
-        RFIDWeigthP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
-        RFIDSizeP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
-        RFIDProductP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
+        RFIDWeigthP0.ethg++ <--> ethernetWire <--> switch3.ethg++;
+        RFIDSizeP0.ethg++ <--> ethernetWire <--> switch3.ethg++;
+        RFIDProductP0.ethg++ <--> ethernetWire <--> switch3.ethg++;
 
 
         // Controller

@@ -137,6 +137,8 @@ void NodeFactory::setDemand(int demmand, int line)
 
     if(!timeoutMsg)
     {
+
+
         timeoutMsg = new cMessage("factory_node_timer");
         scheduleAt(simTime() + intervalTime, timeoutMsg);
     }

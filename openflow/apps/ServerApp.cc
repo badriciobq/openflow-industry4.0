@@ -143,10 +143,10 @@ void ServerApp::handleMessage(cMessage *msg)
 
         if (!appmsg)
             error("Message (%s)%s is not a GenericAppMsg -- "
-                  "probably wrong client app, or wrong setting of TCP's "
-                  "dataTransferMode parameters "
-                  "(try \"object\")",
-                  msg->getClassName(), msg->getName());
+                    "probably wrong client app, or wrong setting of TCP's "
+                    "dataTransferMode parameters "
+                    "(try \"object\")",
+                    msg->getClassName(), msg->getName());
 
         process_message(appmsg);
 
@@ -215,84 +215,153 @@ void ServerApp::process_message(GenericAppMsg *msg)
 {
     // Não excluir a mensagem, ela geralmente é utilizada como resposta pelo server.
     switch (msg->getSensor()) {
-        case SENSOR_PRODUCT:
+    case SENSOR_PRODUCT:
+    {
+        production_starts.insert(msg->getTag_id());
+
+        emit(prodStartsSignal, msg);
+
+        break;
+    }
+    case SENSOR_WEIGTH:
+    {
+        double weigth = msg->getData();
+
+        // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
+        if(weigth < 0.1)
         {
-            production_starts.insert(msg->getTag_id());
+            // Insere o elemento entre os elementos com deifeito
+            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
 
-            emit(prodStartsSignal, msg);
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
 
-            break;
+            // Destroy os produtos com defeito de peso
+            Factory->deleteNode(msg->getTag_id());
+            Factory->setDemand(1, 0);
+
+            emit(prodProblemSignal, msg);
         }
-        case SENSOR_WEIGTH:
+        break;
+    }
+    case SENSOR_SIZE:
+    {
+        double size = msg->getData();
+
+        // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
+        if(size < 0.1)
         {
-            double weigth = msg->getData();
+            // Insere o elemento entre os elementos com deifeito
+            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
 
-            // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
-            if(weigth < 0.1)
-            {
-                // Insere o elemento entre os elementos com deifeito
-                production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
 
-                std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-                if(it != production_starts.end())
-                    production_starts.erase(msg->getTag_id());
+            // Destroy os produtos com defeito de tamanho
+            Factory->deleteNode(msg->getTag_id());
+            Factory->setDemand(1, 0);
 
-                // Destroy os produtos com defeito de peso
-                Factory->deleteNode(msg->getTag_id());
-                Factory->setDemand(1, 1);
+            emit(prodProblemSignal, msg);
 
-                emit(prodProblemSignal, msg);
-            }
-            break;
         }
-        case SENSOR_SIZE:
+        else
         {
-            double size = msg->getData();
+            // Ultimo sensor! fim do processo de produção
+            production_done.insert(msg->getTag_id());
 
-            // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
-            if(size < 0.1)
-            {
-                // Insere o elemento entre os elementos com deifeito
-                production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
 
-                std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-                if(it != production_starts.end())
-                    production_starts.erase(msg->getTag_id());
+            // Destroy os produtos que foram fabriados com sucesso
+            Factory->deleteNode(msg->getTag_id());
 
-                // Destroy os produtos com defeito de tamanho
-                Factory->deleteNode(msg->getTag_id());
-                Factory->setDemand(1, 1);
-
-                emit(prodProblemSignal, msg);
-
-            }
-            else
-            {
-                // Ultimo sensor! fim do processo de produção
-                production_done.insert(msg->getTag_id());
-
-                std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-                if(it != production_starts.end())
-                    production_starts.erase(msg->getTag_id());
-
-                // Destroy os produtos que foram fabriados com sucesso
-                Factory->deleteNode(msg->getTag_id());
-
-                emit(prodDoneSignal, msg);
-            }
-
-            break;
+            emit(prodDoneSignal, msg);
         }
 
-        case CLIENT:
+        break;
+    }
+
+    case SENSOR_PRODUCT_P0:
+    {
+        production_starts.insert(msg->getTag_id());
+
+        emit(prodStartsSignal, msg);
+
+        break;
+    }
+    case SENSOR_WEIGTH_P0:
+    {
+        double weigth = msg->getData();
+
+        // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
+        if(weigth < 0.1)
         {
-            int value = msg->getData();
-            Factory->setDemand(value, 1);
+            // Insere o elemento entre os elementos com deifeito
+            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
 
-            std::cout << "Server recebeu uma mensagem de CLIENT" << endl;
-            EV << "Server recebeu uma mensagem de CLIENT" << endl;
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
 
-            /*if(product_inventory >= value)
+            // Destroy os produtos com defeito de peso
+            Factory->deleteNode(msg->getTag_id());
+            Factory->setDemand(1, 0);
+
+            emit(prodProblemSignal, msg);
+        }
+        break;
+    }
+    case SENSOR_SIZE_P0:
+    {
+        double size = msg->getData();
+
+        // Se o peso do produtor for maior do que 0.9, produto considerado com defeito
+        if(size < 0.1)
+        {
+            // Insere o elemento entre os elementos com deifeito
+            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
+
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
+
+            // Destroy os produtos com defeito de tamanho
+            Factory->deleteNode(msg->getTag_id());
+            Factory->setDemand(1, 0);
+
+            emit(prodProblemSignal, msg);
+
+        }
+        else
+        {
+            // Ultimo sensor! fim do processo de produção
+            production_done.insert(msg->getTag_id());
+
+            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
+            if(it != production_starts.end())
+                production_starts.erase(msg->getTag_id());
+
+            // Destroy os produtos que foram fabriados com sucesso
+            Factory->deleteNode(msg->getTag_id());
+
+            emit(prodDoneSignal, msg);
+        }
+
+        break;
+    }
+
+    case CLIENT:
+    {
+        int value = msg->getData();
+        Factory->setDemand(value, 0);
+
+        std::cout << "Server recebeu uma mensagem de CLIENT" << endl;
+        EV << "Server recebeu uma mensagem de CLIENT" << endl;
+
+        /*if(product_inventory >= value)
             {
                 Factory->setDemand(value);
             }
@@ -301,18 +370,18 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
             }*/
 
-            break;
-        }
-        case SUPPLIER:
-        {
-            std::cout << "Server recebeu uma mensagem de SUPPLIER" << endl;
-            EV << "Server recebeu uma mensagem de SUPPLIER" << endl;
+        break;
+    }
+    case SUPPLIER:
+    {
+        std::cout << "Server recebeu uma mensagem de SUPPLIER" << endl;
+        EV << "Server recebeu uma mensagem de SUPPLIER" << endl;
 
-            break;
-        }
-        default:
-            EV << "sensor desconhecido: " << msg->getSensor() << endl;
-            break;
+        break;
+    }
+    default:
+        EV << "sensor desconhecido: " << msg->getSensor() << endl;
+        break;
     }
 
 }

@@ -60,6 +60,12 @@ class INET_API SensorApp : public TCPAppBase, public ILifecycle
         SENSOR_PRODUCT = 0,
         SENSOR_WEIGTH,
         SENSOR_SIZE,
+        SENSOR_PRODUCT_P0,
+        SENSOR_WEIGTH_P0,
+        SENSOR_SIZE_P0,
+        CLIENT,
+        SERVER,
+        SUPPLIER
     };
 
   protected:

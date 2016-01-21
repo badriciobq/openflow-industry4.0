@@ -69,6 +69,9 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
         SENSOR_PRODUCT = 0,
         SENSOR_WEIGTH,
         SENSOR_SIZE,
+        SENSOR_PRODUCT_P0,
+        SENSOR_WEIGTH_P0,
+        SENSOR_SIZE_P0,
         CLIENT,
         SERVER,
         SUPPLIER

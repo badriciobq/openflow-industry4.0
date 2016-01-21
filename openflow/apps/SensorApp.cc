@@ -104,6 +104,18 @@ void SensorApp::sendRequest()
              {
                  msg->setSensor(SENSOR_WEIGTH);
              }
+             else if (strcmp(getParentModule()->getName(), "RFIDWeigthP0") == 0)
+             {
+                 msg->setSensor(SENSOR_WEIGTH_P0);
+             }
+             else if (strcmp(getParentModule()->getName(), "RFIDSizeP0") == 0)
+             {
+                 msg->setSensor(SENSOR_SIZE_P0);
+             }
+             else if (strcmp(getParentModule()->getName(), "RFIDProductP0") == 0)
+             {
+                 msg->setSensor(SENSOR_PRODUCT_P0);
+             }
          }
 
          sendPacket(msg);
