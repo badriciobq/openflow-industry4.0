@@ -34,6 +34,9 @@ void SupplierApp::initialize(int stage)
     {
         timeOutMess = NULL;
         nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
+
+        simtime_t delay = uniform(0, 0.01);
+        rescheduleTimer(simTime() + delay, MSGKIND_CONNECT);
     }
 }
 

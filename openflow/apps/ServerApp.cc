@@ -90,7 +90,6 @@ void ServerApp::initialize(int stage)
 
 
         // Pega a referência para o factory para mandar destruir os produtos fabricados com sucesso ou que falharem
-
         cModule *factory = getModuleByPath("industry4.factory");
         Factory = check_and_cast<NodeFactory *>(factory);
     }
@@ -240,7 +239,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
                 // Destroy os produtos com defeito de peso
                 Factory->deleteNode(msg->getTag_id());
-                Factory->setDemand(1);
+                Factory->setDemand(1, 1);
 
                 emit(prodProblemSignal, msg);
             }
@@ -262,7 +261,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
                 // Destroy os produtos com defeito de tamanho
                 Factory->deleteNode(msg->getTag_id());
-                Factory->setDemand(1);
+                Factory->setDemand(1, 1);
 
                 emit(prodProblemSignal, msg);
 
@@ -288,7 +287,28 @@ void ServerApp::process_message(GenericAppMsg *msg)
         case CLIENT:
         {
             int value = msg->getData();
-            Factory->setDemand(value);
+            Factory->setDemand(value, 1);
+
+            std::cout << "Server recebeu uma mensagem de CLIENT" << endl;
+            EV << "Server recebeu uma mensagem de CLIENT" << endl;
+
+            /*if(product_inventory >= value)
+            {
+                Factory->setDemand(value);
+            }
+            else
+            {
+
+            }*/
+
+            break;
+        }
+        case SUPPLIER:
+        {
+            std::cout << "Server recebeu uma mensagem de SUPPLIER" << endl;
+            EV << "Server recebeu uma mensagem de SUPPLIER" << endl;
+
+            break;
         }
         default:
             EV << "sensor desconhecido: " << msg->getSensor() << endl;

@@ -34,7 +34,7 @@ network industry4
         {
             delay = 1us;
             datarate = 100Mbps;
-            thruputDisplayFormat = "u";
+            //thruputDisplayFormat = "u";
         }
 
     submodules:
@@ -55,38 +55,60 @@ network industry4
         }
 
         client: StandardHost {
-            @display("p=746,41;i=abstract/people2");
+            @display("p=867,28;i=abstract/people2");
         }
 
         supplier: StandardHost {
-            @display("p=746,122;i=misc/town2");
+            @display("p=875,117;i=misc/town2");
         }
 
         gateway: Open_Flow_Switch {
-            @display("p=591,94;i=device/router");
+            @display("p=752,86;i=device/router");
         }
 
+		// Linha de produção 2
         RFIDWeigth: SensorNode {
             parameters:
-                @display("p=455,349;i=rfid_tag;is=vs");
+                @display("p=667,334;i=rfid_tag;is=vs");
         }
 
         RFIDSize: SensorNode {
             parameters:
-                @display("p=315,349;i=rfid_tag;is=vs");
+                @display("p=556,334;i=rfid_tag;is=vs");
         }
 
         RFIDProduct: SensorNode {
             parameters:
-                @display("p=315,240;i=rfid_tag;is=vs");
+                @display("p=563,240;i=rfid_tag;is=vs");
         }
 
         switch2: Open_Flow_Switch {
-            @display("p=428,180");
+            @display("p=649,162");
+        }
+
+        // Linha de produção 2
+
+        RFIDWeigthP2: SensorNode {
+            parameters:
+                @display("p=180,334;i=rfid_tag;is=vs");
+        }
+
+        RFIDSizeP2: SensorNode {
+            parameters:
+                @display("p=95,334;i=rfid_tag;is=vs");
+        }
+
+        RFIDProductP2: SensorNode {
+            parameters:
+                @display("p=110,240;i=rfid_tag;is=vs");
+        }
+
+        switch3: Open_Flow_Switch {
+            @display("p=325,162");
         }
 
         controller: Open_Flow_Controller {
-            @display("p=428,29");
+            @display("p=556,29");
         }
 
         server: StandardHost {
@@ -100,9 +122,16 @@ network industry4
         RFIDSize.ethg++ <--> ethernetWire <--> switch2.ethg++;
         RFIDProduct.ethg++ <--> ethernetWire <--> switch2.ethg++;
 
+        RFIDWeigthP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
+        RFIDSizeP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
+        RFIDProductP2.ethg++ <--> ethernetWire <--> switch3.ethg++;
+
+
         // Controller
         controller.ethg++ <--> ethernetWire <--> switch2.gate_controller++;
         controller.ethg++ <--> ethernetWire <--> gateway.gate_controller++;
+        controller.ethg++ <--> ethernetWire <--> switch3.gate_controller++;
+
         gateway.ethg++ <--> ethernetWire <--> switch2.ethg++;
         gateway.ethg++ <--> ethernetWire <--> supplier.ethg++;
         gateway.ethg++ <--> ethernetWire <--> client.ethg++;
@@ -110,4 +139,5 @@ network industry4
 
 		// Server que será o controler da fábrica
         server.ethg++ <--> ethernetWire <--> switch2.ethg++;
+        switch3.ethg++ <--> ethernetWire <--> switch2.ethg++;
 }

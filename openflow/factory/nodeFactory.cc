@@ -40,7 +40,6 @@ NodeFactory::~NodeFactory()
 void NodeFactory::initialize(int stage)
 {
     nextNodeId = 0;
-    m_demmand = 0;
     intervalTime = par("intervalTime");
 
     if(stage != 1)
@@ -56,20 +55,25 @@ void NodeFactory::handleMessage(cMessage *msg)
     if(msg->isSelfMessage()){
         // Cria um novo nó a cada intervalo de tempo definido no .ini
 
-        if(m_demmand > 0 )
+        bool cancel = true;
+        for(int i=0; i < qtde_lines; ++i)
         {
-            createNode();
-            scheduleAt(simTime() + intervalTime, timeoutMsg);
+            if(m_demmand[i] > 0 )
+            {
+                createNode(i);
+                scheduleAt(simTime() + intervalTime, timeoutMsg);
+                cancel = false;
+            }
         }
-        else
-        {
+
+        if(cancel){
             cancelAndDelete(timeoutMsg);
             timeoutMsg = NULL;
         }
     }
 }
 
-void NodeFactory::createNode()
+void NodeFactory::createNode(int line)
 {
 
     std::string type = par("nodeType");
@@ -82,7 +86,10 @@ void NodeFactory::createNode()
 
     int32_t nodeVectorIndex = nextNodeId++;
 
-    cModule* mod = nodeType->create("product", parentmod, nodeVectorIndex, nodeVectorIndex);
+    char name[20];
+    sprintf (name, "productP%d", line);
+
+    cModule* mod = nodeType->create(name, parentmod, nodeVectorIndex, nodeVectorIndex);
     mod->finalizeParameters();
     mod->getDisplayString().parse("i=misc/node;is=vs");
     mod->buildInside();
@@ -93,7 +100,7 @@ void NodeFactory::createNode()
     nodes[nodeVectorIndex] = mod;
 
     // Incementa a demanda de produção de nós
-    m_demmand--;
+    m_demmand[line]--;
 
     std::cout << "Falta Produzir: " << m_demmand << endl;
 }
@@ -122,11 +129,11 @@ cModule *NodeFactory::getNode(long id)
     return nodes[id];
 }
 
-void NodeFactory::setDemand(int demmand)
+void NodeFactory::setDemand(int demmand, int line)
 {
     Enter_Method_Silent();
 
-    m_demmand += demmand;
+    m_demmand[line] += demmand;
 
     if(!timeoutMsg)
     {

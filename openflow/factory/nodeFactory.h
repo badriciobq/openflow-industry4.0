@@ -21,7 +21,8 @@
 #include <map>
 
 /**
- * TODO - Generated class
+ * TODO - Observar que a fabrica está com a quatidade de linhas de produção
+ * configurar em hadCode
  */
 class NodeFactory : public cSimpleModule
 {
@@ -31,14 +32,15 @@ class NodeFactory : public cSimpleModule
     virtual int numInitStages() const { return 2; } ;
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
-    void createNode();
+    void createNode(int);
     void deleteNode(long);
     cModule *getNode(long);
-    void setDemand(int demmand);
+    void setDemand(int demmand, int line);
 
   private:
+    static const int qtde_lines = 2;
     int nextNodeId;
-    int m_demmand;
+    int m_demmand[qtde_lines] = {0};
     double intervalTime;
     cMessage *timeoutMsg;
     std::map<long, cModule*> nodes;

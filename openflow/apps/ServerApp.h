@@ -31,6 +31,17 @@
  *
  * @see GenericAppMsg, TCPAppBase
  */
+
+typedef struct type_line_of_production{
+    int product_demmand;
+
+    std::set<int> production_starts; // Produtos que entraram na linha de produção
+    std::set<int> production_done; // Produtos produzidos com sucesso
+    std::map<int, int> production_defect; // Produtos com defeito, armazenados em um map onde <id do produto, sensor que detectou o defeito>
+
+} type_line_of_production;
+
+
 class INET_API ServerApp : public cSimpleModule, public ILifecycle
 {
   protected:
@@ -59,7 +70,8 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
         SENSOR_WEIGTH,
         SENSOR_SIZE,
         CLIENT,
-        SERVER
+        SERVER,
+        SUPPLIER
     };
 
   protected:
@@ -76,12 +88,16 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
   private:
     virtual void process_message(GenericAppMsg *msg);
     NodeFactory *Factory;
+
+    // Armazena o estoque da fábrica
     int product_inventory;
+
+    // Armazena os dados de uma linha de produção
+    type_line_of_production *lines_of_production;
 
     std::set<int> production_starts; // Produtos que entraram na linha de produção
     std::set<int> production_done; // Produtos produzidos com sucesso
     std::map<int, int> production_defect; // Produtos com defeito, armazenados em um map onde <id do produto, sensor que detectou o defeito>
-
 };
 
 #endif

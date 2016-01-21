@@ -3,3 +3,9 @@
 *.o
 *.vci
 *.vec
+*.sca
+
+openflow/out
+openflow/out/*
+openflow/scenarios/results
+openflow/scenarios/results/*
