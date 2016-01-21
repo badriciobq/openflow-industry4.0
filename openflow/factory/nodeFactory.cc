@@ -101,8 +101,6 @@ void NodeFactory::createNode(int line)
 
     // Incementa a demanda de produção de nós
     m_demmand[line]--;
-
-    std::cout << "Falta Produzir: " << m_demmand << endl;
 }
 
 void NodeFactory::deleteNode(long id)
@@ -134,14 +132,10 @@ void NodeFactory::setDemand(int demmand, int line)
     Enter_Method_Silent();
 
     m_demmand[line] += demmand;
-
     if(!timeoutMsg)
     {
-
-
         timeoutMsg = new cMessage("factory_node_timer");
         scheduleAt(simTime() + intervalTime, timeoutMsg);
     }
-
 }
 

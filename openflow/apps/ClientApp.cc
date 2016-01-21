@@ -72,9 +72,6 @@ bool ClientApp::handleOperationStage(LifecycleOperation *operation, int stage, I
 
 void ClientApp::sendRequest()
 {
-    std::cout << "CLIENT enviando dados para server" << endl;
-    EV << "CLIENT enviando dados para server" << endl;
-
      long requestLength = par("requestLength");
      long replyLength = par("replyLength");
      if (requestLength < 1)
@@ -98,9 +95,6 @@ void ClientApp::handleTimer(cMessage *msg)
     {
         case MSGKIND_CONNECT:
         {
-            std::cout << "CLIENT tentando conectar com server" << endl;
-            EV << "CLIENT tentando conectar com server" << endl;
-
             connect(); // active OPEN
 
 

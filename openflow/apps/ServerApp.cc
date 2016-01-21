@@ -13,6 +13,19 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
+
+/**
+ *
+ * Mauriício
+ *
+ * Vale lembrar que existe duas linhas de produção, a 0 e a 1. Cuidado com
+ * as linhas de produção pois os nomes dos sensores e o indice das linhas
+ * está inconsistente.
+ *
+ * TODO - Consertar a inconsistencia nos nomes.
+ */
+
+
 #include <ccomponent.h>
 #include <cdisplaystring.h>
 #include <cenvir.h>
@@ -44,6 +57,7 @@
 #include <iostream>
 #include <utility>
 
+
 Define_Module(ServerApp);
 
 simsignal_t ServerApp::rcvdPkSignal = registerSignal("rcvdPk");
@@ -63,6 +77,9 @@ void ServerApp::initialize(int stage)
         delay = par("replyDelay");
         maxMsgDelay = 0;
         product_inventory = 0;
+        product_demmand = 0;
+
+        lines_of_production = new type_line_of_production[qtde_lines];
 
         //statistics
         msgsRcvd = msgsSent = bytesRcvd = bytesSent = 0;
@@ -71,6 +88,10 @@ void ServerApp::initialize(int stage)
         WATCH(msgsSent);
         WATCH(bytesRcvd);
         WATCH(bytesSent);
+
+        WATCH(lines_of_production[0].product_demmand);
+        WATCH(lines_of_production[0].product_inventory);
+
     }
     else if (stage == 3)
     {
@@ -217,7 +238,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
     switch (msg->getSensor()) {
     case SENSOR_PRODUCT:
     {
-        production_starts.insert(msg->getTag_id());
+        // TODO - Verificar se é o ponto para contabilizar o estoque e a demanda
+
+        lines_of_production[1].production_starts.insert(msg->getTag_id());
 
         emit(prodStartsSignal, msg);
 
@@ -231,15 +254,17 @@ void ServerApp::process_message(GenericAppMsg *msg)
         if(weigth < 0.1)
         {
             // Insere o elemento entre os elementos com deifeito
-            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
+            lines_of_production[1].production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[1].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[1].production_starts.end())
+                lines_of_production[1].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos com defeito de peso
             Factory->deleteNode(msg->getTag_id());
-            Factory->setDemand(1, 0);
+
+            // Demanda a produção de mais um nó para linha de produção 1
+            Factory->setDemand(1, 1);
 
             emit(prodProblemSignal, msg);
         }
@@ -253,15 +278,17 @@ void ServerApp::process_message(GenericAppMsg *msg)
         if(size < 0.1)
         {
             // Insere o elemento entre os elementos com deifeito
-            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
+            lines_of_production[1].production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[1].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[1].production_starts.end())
+                lines_of_production[1].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos com defeito de tamanho
             Factory->deleteNode(msg->getTag_id());
-            Factory->setDemand(1, 0);
+
+            // Demanda a produção de mais um nó para linha de produção 1
+            Factory->setDemand(1, 1);
 
             emit(prodProblemSignal, msg);
 
@@ -269,11 +296,11 @@ void ServerApp::process_message(GenericAppMsg *msg)
         else
         {
             // Ultimo sensor! fim do processo de produção
-            production_done.insert(msg->getTag_id());
+            lines_of_production[1].production_done.insert(msg->getTag_id());
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[1].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[1].production_starts.end())
+                lines_of_production[1].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos que foram fabriados com sucesso
             Factory->deleteNode(msg->getTag_id());
@@ -286,7 +313,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
     case SENSOR_PRODUCT_P0:
     {
-        production_starts.insert(msg->getTag_id());
+        lines_of_production[0].production_starts.insert(msg->getTag_id());
 
         emit(prodStartsSignal, msg);
 
@@ -300,14 +327,16 @@ void ServerApp::process_message(GenericAppMsg *msg)
         if(weigth < 0.1)
         {
             // Insere o elemento entre os elementos com deifeito
-            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
+            lines_of_production[0].production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_WEIGTH));
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[0].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[0].production_starts.end())
+                lines_of_production[0].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos com defeito de peso
             Factory->deleteNode(msg->getTag_id());
+
+            // Linha de produção zero - segundo argumento
             Factory->setDemand(1, 0);
 
             emit(prodProblemSignal, msg);
@@ -322,14 +351,17 @@ void ServerApp::process_message(GenericAppMsg *msg)
         if(size < 0.1)
         {
             // Insere o elemento entre os elementos com deifeito
-            production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
+            lines_of_production[0].production_defect.insert( std::pair<int, int>(msg->getTag_id(), SENSOR_SIZE));
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[0].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[0].production_starts.end())
+                lines_of_production[0].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos com defeito de tamanho
             Factory->deleteNode(msg->getTag_id());
+
+
+
             Factory->setDemand(1, 0);
 
             emit(prodProblemSignal, msg);
@@ -338,11 +370,11 @@ void ServerApp::process_message(GenericAppMsg *msg)
         else
         {
             // Ultimo sensor! fim do processo de produção
-            production_done.insert(msg->getTag_id());
+            lines_of_production[0].production_done.insert(msg->getTag_id());
 
-            std::set<int>::iterator it = production_starts.find(msg->getTag_id());
-            if(it != production_starts.end())
-                production_starts.erase(msg->getTag_id());
+            std::set<int>::iterator it = lines_of_production[0].production_starts.find(msg->getTag_id());
+            if(it != lines_of_production[0].production_starts.end())
+                lines_of_production[0].production_starts.erase(msg->getTag_id());
 
             // Destroy os produtos que foram fabriados com sucesso
             Factory->deleteNode(msg->getTag_id());
@@ -355,20 +387,136 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
     case CLIENT:
     {
+        // TODO - Passar verificando se é preciso validar se o product_Demmand é mair do que zero
+
+        // Quantidade de nós a produzer. Demanda do cliente.
         int value = msg->getData();
-        Factory->setDemand(value, 0);
 
-        std::cout << "Server recebeu uma mensagem de CLIENT" << endl;
-        EV << "Server recebeu uma mensagem de CLIENT" << endl;
+        product_demmand += value;
 
-        /*if(product_inventory >= value)
+        // Calcula o tamanho do estoque (estoque reserva + estoque das linhas de produção).
+        int inventory_line0 = lines_of_production[0].product_inventory - lines_of_production[0].product_demmand;
+        int inventory_line1 = lines_of_production[1].product_inventory - lines_of_production[1].product_demmand;
+
+        int aux_inventory = product_inventory + inventory_line0 + inventory_line1;
+
+        // Se a demanda for maior do que o estoque?
+        if(product_demmand > aux_inventory)
+        {
+            if(aux_inventory > 0)
             {
-                Factory->setDemand(value);
+                // Demanda produção na linha zero quando existe estoque sobrando
+                if(inventory_line0 > 0)
+                {
+                    Factory->setDemand(inventory_line0, 0);
+                    lines_of_production[0].product_demmand += inventory_line0;
+                    product_demmand -= inventory_line0;
+                }
+
+                // Demanda produção na linha um quando existe estoque sobrando
+                if(inventory_line1 > 0)
+                {
+                    Factory->setDemand(inventory_line1, 1);
+                    lines_of_production[1].product_demmand += inventory_line1;
+                    product_demmand -= inventory_line1;
+                }
+
+                if(product_inventory > 0)
+                {
+                    if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
+                    {
+                        Factory->setDemand(product_inventory, 0);
+                        lines_of_production[0].product_demmand += product_inventory;
+                        lines_of_production[0].product_inventory += product_inventory;
+                    }
+                    else
+                    {
+                        Factory->setDemand(product_inventory, 1);
+                        lines_of_production[1].product_demmand += product_inventory;
+                        lines_of_production[1].product_inventory += product_inventory;
+                    }
+                    product_inventory -= product_inventory;
+                    product_demmand -= product_inventory;
+                }
+
             }
+
+            // TODO - Solicitar do fornecedor estoque suficiente para atender a demanda do cliente
+            // Supplier.request.product_demmand - Pseudo-código
+        }
+        else
+        {
+            // Meu estoque total é maior do que a demanda
+            if(product_inventory >= product_demmand)
+            {
+                if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
+                {
+                    Factory->setDemand(product_demmand, 0);
+                    lines_of_production[0].product_demmand += product_demmand;
+                    lines_of_production[0].product_inventory += product_demmand;
+                }
+                else
+                {
+                    Factory->setDemand(product_demmand, 1);
+                    lines_of_production[1].product_demmand += product_demmand;
+                    lines_of_production[1].product_inventory += product_demmand;
+                }
+                product_inventory -= product_demmand;
+                product_demmand -= product_demmand;
+            }
+            // Meu estoque total é menor do que a demanda, tenho que usar o estoque das linhas de produção
             else
             {
+                if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
+                {
+                    Factory->setDemand(product_inventory, 0);
+                    lines_of_production[0].product_demmand += product_inventory;
+                    lines_of_production[0].product_inventory += product_inventory;
+                }
+                else
+                {
+                    Factory->setDemand(product_inventory, 1);
+                    lines_of_production[1].product_demmand += product_inventory;
+                    lines_of_production[1].product_inventory += product_inventory;
+                }
 
-            }*/
+                product_inventory -= product_inventory;
+                product_demmand -= product_inventory;
+
+                if(product_demmand > 0)
+                {
+                    if(inventory_line0 > product_demmand)
+                    {
+                        Factory->setDemand(product_demmand, 0);
+                        lines_of_production[0].product_demmand += product_demmand;
+                        product_demmand -= product_demmand;
+                    }
+                    else
+                    {
+                        Factory->setDemand(inventory_line0, 0);
+                        lines_of_production[0].product_demmand += inventory_line0;
+                        product_demmand -= inventory_line0;
+                    }
+                }
+
+                if(product_demmand > 0)
+                {
+                    // Demanda produção na linha um quando existe estoque sobrando
+                    if(inventory_line1 > product_demmand)
+                    {
+                        Factory->setDemand(product_demmand, 1);
+                        lines_of_production[1].product_demmand += product_demmand;
+                        product_demmand -= product_demmand;
+                    }
+                    else
+                    {
+                        Factory->setDemand(inventory_line1, 1);
+                        lines_of_production[1].product_demmand += inventory_line1;
+                        product_demmand -= inventory_line1;
+                    }
+                }
+            }
+        }
 
         break;
     }
