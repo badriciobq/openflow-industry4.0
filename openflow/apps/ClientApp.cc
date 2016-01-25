@@ -25,6 +25,7 @@ void ClientApp::initialize(int stage)
         numRequestsToSend = 0;
 
         earlySend = false;  // TBD make it parameter
+        toSend = 0;
 
         WATCH(numRequestsToSend);
         WATCH(earlySend);
@@ -72,51 +73,53 @@ bool ClientApp::handleOperationStage(LifecycleOperation *operation, int stage, I
 
 void ClientApp::sendRequest()
 {
-     long requestLength = par("requestLength");
-     long replyLength = par("replyLength");
-     if (requestLength < 1)
-         requestLength = 1;
-     if (replyLength < 1)
-         replyLength = 1;
+    long requestLength = par("requestLength");
+    long replyLength = par("replyLength");
+    if (requestLength < 1)
+        requestLength = 1;
+    if (replyLength < 1)
+        replyLength = 1;
 
-     GenericAppMsg *msg = new GenericAppMsg("data");
-     msg->setByteLength(requestLength);
-     msg->setExpectedReplyLength(replyLength);
-     msg->setServerClose(false);
-     msg->setSensor(CLIENT);
-     msg->setData(500);
+    GenericAppMsg *msg = new GenericAppMsg("data");
+    msg->setByteLength(requestLength);
+    msg->setExpectedReplyLength(replyLength);
+    msg->setServerClose(false);
+    msg->setSensor(CLIENT);
+    msg->setData(10);
 
-     sendPacket(msg);
+    toSend++;
+
+    sendPacket(msg);
 }
 
 void ClientApp::handleTimer(cMessage *msg)
 {
     switch (msg->getKind())
     {
-        case MSGKIND_CONNECT:
-        {
-            connect(); // active OPEN
+    case MSGKIND_CONNECT:
+    {
+        connect(); // active OPEN
 
 
-            // significance of earlySend: if true, data will be sent already
-            // in the ACK of SYN, otherwise only in a separate packet (but still
-            // immediately)
-            if (earlySend)
-                sendRequest();
+        // significance of earlySend: if true, data will be sent already
+        // in the ACK of SYN, otherwise only in a separate packet (but still
+        // immediately)
+        if (earlySend)
+            sendRequest();
 
-            break;
-        }
-        case MSGKIND_SEND:
-        {
-           sendRequest();
-           numRequestsToSend--;
-           // no scheduleAt(): next request will be sent when reply to this one
-           // arrives (see socketDataArrived())
-           break;
-        }
+        break;
+    }
+    case MSGKIND_SEND:
+    {
+        sendRequest();
+        numRequestsToSend--;
+        // no scheduleAt(): next request will be sent when reply to this one
+        // arrives (see socketDataArrived())
+        break;
+    }
 
-        default:
-            throw cRuntimeError("Invalid timer msg: kind=%d", msg->getKind());
+    default:
+        throw cRuntimeError("Invalid timer msg: kind=%d", msg->getKind());
     }
 }
 
@@ -172,8 +175,10 @@ void ClientApp::socketClosed(int connId, void *ptr)
 {
     TCPAppBase::socketClosed(connId, ptr);
 
-    delete(timeOutMess);
-    timeOutMess = NULL;
+    if(toSend < 5){
+        simtime_t delay = simTime() + 30;
+        rescheduleTimer( delay, MSGKIND_CONNECT);
+    }
 }
 
 void ClientApp::socketFailure(int connId, void *ptr, int code)

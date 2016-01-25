@@ -13,8 +13,8 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef __OPENFLOW_SUPPLIERAPP_H_
-#define __OPENFLOW_SUPPLIERAPP_H_
+#ifndef __OPENFLOW_SupplierAPP_H_
+#define __OPENFLOW_SupplierAPP_H_
 
 #include "INETDefs.h"
 
@@ -25,10 +25,7 @@
 #include "TypeMessages.h"
 #include "RFID_Message_m.h"
 
-#include <deque>
-#include <set>
-
-/**An example request-reply based client application.
+/**An example request-reply based Supplier application.
  */
 class INET_API SupplierApp : public TCPAppBase, public ILifecycle
 {
@@ -42,7 +39,7 @@ class INET_API SupplierApp : public TCPAppBase, public ILifecycle
     simtime_t stopTime;
 
     /** Utility: sends a request to the server */
-    virtual void sendRequest();
+    virtual void sendRequest(double);
 
     /** Utility: cancel msgTimer and if d is smaller than stopTime, then schedule it to d,
      * otherwise delete msgTimer */
@@ -52,14 +49,14 @@ class INET_API SupplierApp : public TCPAppBase, public ILifecycle
     SupplierApp();
     virtual ~SupplierApp();
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
-    virtual void pushBuffer(int id);
-    virtual int popBuffer();
-    virtual bool isBufferEmpty();
 
     enum sensor_kind{
         SENSOR_PRODUCT = 0,
         SENSOR_WEIGTH,
         SENSOR_SIZE,
+        SENSOR_PRODUCT_P0,
+        SENSOR_WEIGTH_P0,
+        SENSOR_SIZE_P0,
         CLIENT,
         SERVER,
         SUPPLIER
@@ -87,10 +84,6 @@ class INET_API SupplierApp : public TCPAppBase, public ILifecycle
     virtual void socketFailure(int connId, void *yourPtr, int code);
 
     virtual bool isNodeUp();
-
-  private:
-    std::deque<int> m_buffer;
-    std::set<int> m_history;
 
 };
 

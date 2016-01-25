@@ -16,7 +16,7 @@
 
 /**
  *
- * Mauriício
+ * Maurício <badriciobq@gmail.com>
  *
  * Vale lembrar que existe duas linhas de produção, a 0 e a 1. Cuidado com
  * as linhas de produção pois os nomes dos sensores e o indice das linhas
@@ -89,8 +89,14 @@ void ServerApp::initialize(int stage)
         WATCH(bytesRcvd);
         WATCH(bytesSent);
 
+        WATCH(product_demmand);
+        WATCH(product_inventory);
+
         WATCH(lines_of_production[0].product_demmand);
         WATCH(lines_of_production[0].product_inventory);
+
+        WATCH(lines_of_production[1].product_demmand);
+        WATCH(lines_of_production[1].product_inventory);
 
     }
     else if (stage == 3)
@@ -230,20 +236,47 @@ void ServerApp::finish()
 {
     EV << getFullPath() << ": sent " << bytesSent << " bytes in " << msgsSent << " packets\n";
     EV << getFullPath() << ": received " << bytesRcvd << " bytes in " << msgsRcvd << " packets\n";
+
+
+    std::cout << "Fábrica" << endl;
+    std::cout << "Demanda: " <<  product_demmand << endl;
+    std::cout << "Estoque: " << product_inventory << endl;
+
+    std::cout << endl;
+    std::cout << "Linha de produção 0" << endl;
+    std::cout << "Demanda: " << lines_of_production[0].product_demmand << endl;
+    std::cout << "Estoque: " << lines_of_production[0].product_inventory << endl;
+
+    std::cout << "Iniciados: " << lines_of_production[0].production_starts.size() << endl;
+    std::cout << "Defeito: " << lines_of_production[0].production_defect.size() << endl;
+    std::cout << "Concluídos: " << lines_of_production[0].production_done.size() << endl;
+
+    std::cout << endl;
+    std::cout << "Linha de produção 1" << endl;
+    std::cout << "Demanda: " << lines_of_production[1].product_demmand << endl;
+    std::cout << "Estoque: " << lines_of_production[1].product_inventory << endl;
+
+    std::cout << "Iniciados: " << lines_of_production[1].production_starts.size() << endl;
+    std::cout << "Defeito: " << lines_of_production[1].production_defect.size() << endl;
+    std::cout << "Concluídos: " << lines_of_production[1].production_done.size() << endl;
+
+
+
 }
 
 void ServerApp::process_message(GenericAppMsg *msg)
 {
     // Não excluir a mensagem, ela geralmente é utilizada como resposta pelo server.
     switch (msg->getSensor()) {
+
     case SENSOR_PRODUCT:
     {
-        // TODO - Verificar se é o ponto para contabilizar o estoque e a demanda
-
         lines_of_production[1].production_starts.insert(msg->getTag_id());
 
-        emit(prodStartsSignal, msg);
+        // A cada produto que entra em produção eu incremento o estoque de matéria prima
+        lines_of_production[1].product_inventory--;
 
+        emit(prodStartsSignal, msg);
         break;
     }
     case SENSOR_WEIGTH:
@@ -263,8 +296,12 @@ void ServerApp::process_message(GenericAppMsg *msg)
             // Destroy os produtos com defeito de peso
             Factory->deleteNode(msg->getTag_id());
 
-            // Demanda a produção de mais um nó para linha de produção 1
-            Factory->setDemand(1, 1);
+            /* A cada produto com defeito, eu decremento o produto da linha de produção atual e
+             * mando o produto para ser uma demanda de fábrica, com isso ele pode ser atendido
+             * por outra linha de produção ociosa.
+             * */
+            lines_of_production[1].product_demmand--;
+            product_demmand++;
 
             emit(prodProblemSignal, msg);
         }
@@ -287,15 +324,18 @@ void ServerApp::process_message(GenericAppMsg *msg)
             // Destroy os produtos com defeito de tamanho
             Factory->deleteNode(msg->getTag_id());
 
-            // Demanda a produção de mais um nó para linha de produção 1
-            Factory->setDemand(1, 1);
+            /* A cada produto com defeito, eu decremento o produto da linha de produção atual e
+             * mando o produto para ser uma demanda de fábrica, com isso ele pode ser atendido
+             * por outra linha de produção ociosa.
+             * */
+            lines_of_production[1].product_demmand--;
+            product_demmand++;
 
             emit(prodProblemSignal, msg);
-
         }
         else
         {
-            // Ultimo sensor! fim do processo de produção
+            // Último sensor! fim do processo de produção
             lines_of_production[1].production_done.insert(msg->getTag_id());
 
             std::set<int>::iterator it = lines_of_production[1].production_starts.find(msg->getTag_id());
@@ -304,6 +344,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
             // Destroy os produtos que foram fabriados com sucesso
             Factory->deleteNode(msg->getTag_id());
+
+            /* A cada produto fabricado com sucesso, é decretado um produto da demanda */
+            lines_of_production[1].product_demmand--;
 
             emit(prodDoneSignal, msg);
         }
@@ -314,6 +357,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
     case SENSOR_PRODUCT_P0:
     {
         lines_of_production[0].production_starts.insert(msg->getTag_id());
+
+        // Incrementa a matéria prima de cada nó que inicia.
+        lines_of_production[0].product_inventory--;
 
         emit(prodStartsSignal, msg);
 
@@ -336,8 +382,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
             // Destroy os produtos com defeito de peso
             Factory->deleteNode(msg->getTag_id());
 
-            // Linha de produção zero - segundo argumento
-            Factory->setDemand(1, 0);
+            lines_of_production[0].product_demmand--;
+            product_demmand++;
 
             emit(prodProblemSignal, msg);
         }
@@ -360,9 +406,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
             // Destroy os produtos com defeito de tamanho
             Factory->deleteNode(msg->getTag_id());
 
-
-
-            Factory->setDemand(1, 0);
+            lines_of_production[0].product_demmand--;
+            product_demmand++;
 
             emit(prodProblemSignal, msg);
 
@@ -379,6 +424,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
             // Destroy os produtos que foram fabriados com sucesso
             Factory->deleteNode(msg->getTag_id());
 
+            lines_of_production[0].product_demmand--;
+
             emit(prodDoneSignal, msg);
         }
 
@@ -387,6 +434,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
     case CLIENT:
     {
+        std::cout << "SERVER <- CLIENT: more 10 elements"  << endl;
+
         // Quantidade de nós a produzer. Demanda do cliente.
         int value = msg->getData();
 
@@ -395,54 +444,34 @@ void ServerApp::process_message(GenericAppMsg *msg)
         if(product_demmand == 0)
             break;
 
-        // Se a demanda for maior do que o estoque?
-        if(product_demmand > product_inventory)
-        {
-            if(product_inventory > 0)
-            {
-                if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
-                {
-                    Factory->setDemand(product_inventory, 0);
-                    lines_of_production[0].product_demmand += product_inventory;
-                    lines_of_production[0].product_inventory += product_inventory;
-                }
-                else
-                {
-                    Factory->setDemand(product_inventory, 1);
-                    lines_of_production[1].product_demmand += product_inventory;
-                    lines_of_production[1].product_inventory += product_inventory;
-                }
-                product_inventory -= product_inventory;
-                product_demmand -= product_inventory;
-            }
-
-            // TODO - Solicitar do fornecedor estoque suficiente para atender a demanda do cliente
-            // Supplier.request.product_demmand - Pseudo-código
-        }
-        else
-        {
-            if(lines_of_production[0].product_demmand < lines_of_production[1].product_demmand)
-            {
-                Factory->setDemand(product_demmand, 0);
-                lines_of_production[0].product_demmand += product_demmand;
-                lines_of_production[0].product_inventory += product_demmand;
-            }
-            else
-            {
-                Factory->setDemand(product_demmand, 1);
-                lines_of_production[1].product_demmand += product_demmand;
-                lines_of_production[1].product_inventory += product_demmand;
-            }
-            product_inventory -= product_demmand;
-            product_demmand -= product_demmand;
-        }
-
+        check_demmmand();
         break;
     }
     case SUPPLIER:
     {
-        std::cout << "Server recebeu uma mensagem de SUPPLIER" << endl;
-        EV << "Server recebeu uma mensagem de SUPPLIER" << endl;
+
+        std::cout << "SERVER <- SUPPLIER";
+
+        // Valor -1 indica início de comunicação; Valor diferente indica fornecimento de material
+        int value = msg->getData();
+
+        std::cout << ": value: " << value ;
+
+        if(value == -1)
+        {
+            std::cout << endl;
+
+            // Solicita do fornecedor matéria prima
+            if(product_demmand > product_inventory)
+                msg->setData(product_demmand);
+        }
+        else
+        {
+            std::cout << " more " << value << " elements." << endl;
+            product_inventory += value;
+        }
+
+        check_demmmand();
 
         break;
     }
@@ -451,4 +480,52 @@ void ServerApp::process_message(GenericAppMsg *msg)
         break;
     }
 
+}
+
+
+void ServerApp::check_demmmand()
+{
+
+    if(product_demmand == 0)
+        return;
+
+    // Se a demanda for maior do que o estoque?
+    if(product_demmand > product_inventory)
+    {
+        if(product_inventory > 0)
+        {
+            if(lines_of_production[0].product_demmand <= lines_of_production[1].product_demmand)
+            {
+                Factory->setDemand(product_inventory, 0);
+                lines_of_production[0].product_demmand += product_inventory;
+                lines_of_production[0].product_inventory += product_inventory;
+            }
+            else
+            {
+                Factory->setDemand(product_inventory, 1);
+                lines_of_production[1].product_demmand += product_inventory;
+                lines_of_production[1].product_inventory += product_inventory;
+            }
+
+            product_demmand -= product_inventory;
+            product_inventory -= product_inventory;
+        }
+    }
+    else
+    {
+        if(lines_of_production[0].product_demmand <= lines_of_production[1].product_demmand)
+        {
+            Factory->setDemand(product_demmand, 0);
+            lines_of_production[0].product_demmand += product_demmand;
+            lines_of_production[0].product_inventory += product_demmand;
+        }
+        else
+        {
+            Factory->setDemand(product_demmand, 1);
+            lines_of_production[1].product_demmand += product_demmand;
+            lines_of_production[1].product_inventory += product_demmand;
+        }
+        product_inventory -= product_demmand;
+        product_demmand -= product_demmand;
+    }
 }

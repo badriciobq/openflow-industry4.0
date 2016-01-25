@@ -92,6 +92,7 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
   private:
     const int qtde_lines = 2;
     virtual void process_message(GenericAppMsg *msg);
+    virtual void check_demmmand();
     NodeFactory *Factory;
 
     // Armazena o estoque da fábrica

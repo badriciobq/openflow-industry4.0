@@ -61,14 +61,18 @@ void NodeFactory::handleMessage(cMessage *msg)
             if(m_demmand[i] > 0 )
             {
                 createNode(i);
-                scheduleAt(simTime() + intervalTime, timeoutMsg);
                 cancel = false;
             }
         }
 
-        if(cancel){
+        if(cancel)
+        {
             cancelAndDelete(timeoutMsg);
             timeoutMsg = NULL;
+        }
+        else
+        {
+            scheduleAt(simTime() + intervalTime, timeoutMsg);
         }
     }
 }
@@ -132,6 +136,7 @@ void NodeFactory::setDemand(int demmand, int line)
     Enter_Method_Silent();
 
     m_demmand[line] += demmand;
+
     if(!timeoutMsg)
     {
         timeoutMsg = new cMessage("factory_node_timer");

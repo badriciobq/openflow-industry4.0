@@ -84,6 +84,8 @@ class INET_API ClientApp : public TCPAppBase, public ILifecycle
 
     virtual bool isNodeUp();
 
+  private:
+    int toSend;
 };
 
 
