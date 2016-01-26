@@ -64,9 +64,22 @@ simsignal_t ServerApp::rcvdPkSignal = registerSignal("rcvdPk");
 simsignal_t ServerApp::sentPkSignal = registerSignal("sentPk");
 
 
-simsignal_t ServerApp::prodDoneSignal = registerSignal("prodDone");
-simsignal_t ServerApp::prodProblemSignal = registerSignal("prodProblem");
-simsignal_t ServerApp::prodStartsSignal = registerSignal("prodStarts");
+simsignal_t ServerApp::man_demmandSignal = registerSignal("man_demmand");
+simsignal_t ServerApp::man_inventorySignal = registerSignal("man_inventory");
+
+simsignal_t ServerApp::lin_0_demmandSignal = registerSignal("lin_0_demmand");
+simsignal_t ServerApp::lin_0_inventorySignal = registerSignal("lin_0_inventory");
+simsignal_t ServerApp::lin_0_prodDoneSignal = registerSignal("lin_0_prodDone");
+simsignal_t ServerApp::lin_0_prodProblemSignal = registerSignal("lin_0_prodProblem");
+simsignal_t ServerApp::lin_0_prodStartsSignal = registerSignal("lin_0_prodStarts");
+
+
+simsignal_t ServerApp::lin_1_demmandSignal = registerSignal("lin_1_demmand");
+simsignal_t ServerApp::lin_1_inventorySignal = registerSignal("lin_1_inventory");
+simsignal_t ServerApp::lin_1_prodDoneSignal = registerSignal("lin_1_prodDone");
+simsignal_t ServerApp::lin_1_prodProblemSignal = registerSignal("lin_1_prodProblem");
+simsignal_t ServerApp::lin_1_prodStartsSignal = registerSignal("lin_1_prodStarts");
+
 
 void ServerApp::initialize(int stage)
 {
@@ -276,7 +289,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
         // A cada produto que entra em produção eu incremento o estoque de matéria prima
         lines_of_production[1].product_inventory--;
 
-        emit(prodStartsSignal, msg);
+        emit(lin_1_prodStartsSignal, msg);
+        emit(lin_1_inventorySignal, -1);
+
         break;
     }
     case SENSOR_WEIGTH:
@@ -303,7 +318,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
             lines_of_production[1].product_demmand--;
             product_demmand++;
 
-            emit(prodProblemSignal, msg);
+            emit(lin_1_prodProblemSignal, msg);
+            emit(lin_1_demmandSignal, -1);
+            emit(man_demmandSignal, +1);
         }
         break;
     }
@@ -331,7 +348,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
             lines_of_production[1].product_demmand--;
             product_demmand++;
 
-            emit(prodProblemSignal, msg);
+            emit(lin_1_prodProblemSignal, msg);
+            emit(lin_1_demmandSignal, -1);
+            emit(man_demmandSignal, +1);
         }
         else
         {
@@ -348,7 +367,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
             /* A cada produto fabricado com sucesso, é decretado um produto da demanda */
             lines_of_production[1].product_demmand--;
 
-            emit(prodDoneSignal, msg);
+            emit(lin_1_prodDoneSignal, msg);
+            emit(lin_1_demmandSignal, -1);
         }
 
         break;
@@ -361,7 +381,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
         // Incrementa a matéria prima de cada nó que inicia.
         lines_of_production[0].product_inventory--;
 
-        emit(prodStartsSignal, msg);
+        emit(lin_0_prodStartsSignal, msg);
+        emit(lin_0_inventorySignal, -1);
 
         break;
     }
@@ -385,7 +406,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
             lines_of_production[0].product_demmand--;
             product_demmand++;
 
-            emit(prodProblemSignal, msg);
+            emit(lin_0_prodProblemSignal, msg);
+            emit(lin_0_demmandSignal, -1);
+            emit(man_demmandSignal, +1);
         }
         break;
     }
@@ -409,7 +432,9 @@ void ServerApp::process_message(GenericAppMsg *msg)
             lines_of_production[0].product_demmand--;
             product_demmand++;
 
-            emit(prodProblemSignal, msg);
+            emit(lin_0_prodProblemSignal, msg);
+            emit(lin_0_demmandSignal, -1);
+            emit(man_demmandSignal, +1);
 
         }
         else
@@ -426,7 +451,8 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
             lines_of_production[0].product_demmand--;
 
-            emit(prodDoneSignal, msg);
+            emit(lin_0_prodDoneSignal, msg);
+            emit(lin_0_demmandSignal, -1);
         }
 
         break;
@@ -438,6 +464,7 @@ void ServerApp::process_message(GenericAppMsg *msg)
         int value = msg->getData();
 
         product_demmand += value;
+        emit(man_demmandSignal, value);
 
         if(product_demmand == 0)
             break;
@@ -459,9 +486,22 @@ void ServerApp::process_message(GenericAppMsg *msg)
         else
         {
             product_inventory += value;
+            emit(man_inventorySignal, value);
         }
 
         check_demmmand();
+
+
+        // Encerra a simulação quando for produzido 1000 produtos
+        int soma = 0;
+        for(int i=0; i<qtde_lines; i++)
+        {
+            soma += lines_of_production[i].production_done.size();
+        }
+
+        if(soma == 1000)
+            endSimulation();
+
 
         break;
     }
@@ -489,13 +529,24 @@ void ServerApp::check_demmmand()
                 Factory->setDemand(product_inventory, 0);
                 lines_of_production[0].product_demmand += product_inventory;
                 lines_of_production[0].product_inventory += product_inventory;
+
+                emit(lin_0_demmandSignal, product_inventory);
+                emit(lin_0_inventorySignal, product_inventory);
+
             }
             else
             {
                 Factory->setDemand(product_inventory, 1);
                 lines_of_production[1].product_demmand += product_inventory;
                 lines_of_production[1].product_inventory += product_inventory;
+
+                emit(lin_1_demmandSignal, product_inventory);
+                emit(lin_1_inventorySignal, product_inventory);
+
             }
+
+            emit(man_demmandSignal, -1*product_inventory);
+            emit(man_inventorySignal, -1*product_inventory);
 
             product_demmand -= product_inventory;
             product_inventory -= product_inventory;
@@ -508,13 +559,24 @@ void ServerApp::check_demmmand()
             Factory->setDemand(product_demmand, 0);
             lines_of_production[0].product_demmand += product_demmand;
             lines_of_production[0].product_inventory += product_demmand;
+
+            emit(lin_0_demmandSignal, product_demmand);
+            emit(lin_0_inventorySignal, product_demmand);
         }
         else
         {
             Factory->setDemand(product_demmand, 1);
             lines_of_production[1].product_demmand += product_demmand;
             lines_of_production[1].product_inventory += product_demmand;
+
+            emit(lin_1_demmandSignal, product_demmand);
+            emit(lin_1_inventorySignal, product_demmand);
+
         }
+
+        emit(man_demmandSignal, -1*product_demmand);
+        emit(man_inventorySignal, -1*product_demmand);
+
         product_inventory -= product_demmand;
         product_demmand -= product_demmand;
     }

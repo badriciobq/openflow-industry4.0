@@ -32,12 +32,41 @@ simple ServerApp like ITCPApp
         @statistic[sentPk](title="packets sent"; source=sentPk; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         @statistic[endToEndDelay](title="end-to-end delay"; source="messageAge(rcvdPk)"; unit=s; record=histogram,vector; interpolationmode=none);
         
-        @signal[prodDone](type=GenericAppMsg);
-        @signal[prodProblem](type=GenericAppMsg);
-        @signal[prodStarts](type=GenericAppMsg);
-        @statistic[prodDone](title="produtos concluídos"; source=prodDone; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
-        @statistic[prodProblem](title="produtos concluídos"; source=prodProblem; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
-        @statistic[prodStarts](title="produtos concluídos"; source=prodStarts; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        // Fabrica 
+        @signal[man_inventory](type=int);
+        @signal[man_demmand](type=int);
+        @statistic[man_inventory](title="manufacture inventory"; source=man_inventory; record=vector,histogram; interpolationmode=none);
+        @statistic[man_demmand](title="manufacture demmand"; source=man_demmand; record=vector,histogram; interpolationmode=none);
+        
+        // Linha de produção zero
+        @signal[lin_0_inventory](type=int);
+        @signal[lin_0_demmand](type=int);
+        
+        @statistic[lin_0_inventory](title="linha zero inventory"; source=lin_0_inventory; record=vector,histogram; interpolationmode=none);
+        @statistic[lin_0_demmand](title="linha zero demmand"; source=lin_0_demmand; record=vector,histogram; interpolationmode=none);
+        
+        @signal[lin_0_prodDone](type=GenericAppMsg);
+        @signal[lin_0_prodProblem](type=GenericAppMsg);
+        @signal[lin_0_prodStarts](type=GenericAppMsg);
+        
+        @statistic[lin_0_prodDone](title="produtos concluídos"; source=lin_0_prodDone; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        @statistic[lin_0_prodProblem](title="produtos concluídos"; source=lin_0_prodProblem; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        @statistic[lin_0_prodStarts](title="produtos concluídos"; source=lin_0_prodStarts; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        
+        // Linha de produção um
+        @signal[lin_1_inventory](type=int);
+        @signal[lin_1_demmand](type=int);
+        
+        @statistic[lin_1_inventory](title="linha zero inventory"; source=lin_1_inventory; record=vector,histogram; interpolationmode=none);
+        @statistic[lin_1_demmand](title="linha zero demmand"; source=lin_1_demmand; record=vector,histogram; interpolationmode=none);
+        
+        @signal[lin_1_prodDone](type=GenericAppMsg);
+        @signal[lin_1_prodProblem](type=GenericAppMsg);
+        @signal[lin_1_prodStarts](type=GenericAppMsg);
+        
+        @statistic[lin_1_prodDone](title="produtos concluídos"; source=lin_1_prodDone; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        @statistic[lin_1_prodProblem](title="produtos concluídos"; source=lin_1_prodProblem; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
+        @statistic[lin_1_prodStarts](title="produtos concluídos"; source=lin_1_prodStarts; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
         
     gates:
         input tcpIn @labels(TCPCommand/up);

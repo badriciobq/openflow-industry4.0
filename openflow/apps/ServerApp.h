@@ -58,9 +58,21 @@ class INET_API ServerApp : public cSimpleModule, public ILifecycle
     static simsignal_t rcvdPkSignal;
     static simsignal_t sentPkSignal;
 
-    static simsignal_t prodDoneSignal;
-    static simsignal_t prodProblemSignal;
-    static simsignal_t prodStartsSignal;
+    static simsignal_t man_inventorySignal;
+    static simsignal_t man_demmandSignal;
+
+    static simsignal_t lin_0_inventorySignal;
+    static simsignal_t lin_0_demmandSignal;
+    static simsignal_t lin_0_prodDoneSignal;
+    static simsignal_t lin_0_prodProblemSignal;
+    static simsignal_t lin_0_prodStartsSignal;
+
+    static simsignal_t lin_1_inventorySignal;
+    static simsignal_t lin_1_demmandSignal;
+    static simsignal_t lin_1_prodDoneSignal;
+    static simsignal_t lin_1_prodProblemSignal;
+    static simsignal_t lin_1_prodStartsSignal;
+
 
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)

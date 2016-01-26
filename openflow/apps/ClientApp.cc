@@ -85,7 +85,7 @@ void ClientApp::sendRequest()
     msg->setExpectedReplyLength(replyLength);
     msg->setServerClose(false);
     msg->setSensor(CLIENT);
-    msg->setData(10);
+    msg->setData(100);
 
     toSend++;
 
@@ -175,7 +175,7 @@ void ClientApp::socketClosed(int connId, void *ptr)
 {
     TCPAppBase::socketClosed(connId, ptr);
 
-    if(toSend < 5){
+    if(toSend < 10){
         simtime_t delay = simTime() + 30;
         rescheduleTimer( delay, MSGKIND_CONNECT);
     }
