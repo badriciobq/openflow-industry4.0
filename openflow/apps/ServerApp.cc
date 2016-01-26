@@ -117,7 +117,7 @@ void ServerApp::initialize(int stage)
 
 
         // Pega a referência para o factory para mandar destruir os produtos fabricados com sucesso ou que falharem
-        cModule *factory = getModuleByPath("industry4.factory");
+        cModule *factory = getModuleByPath("factory");
         Factory = check_and_cast<NodeFactory *>(factory);
     }
 }
@@ -434,8 +434,6 @@ void ServerApp::process_message(GenericAppMsg *msg)
 
     case CLIENT:
     {
-        std::cout << "SERVER <- CLIENT: more 10 elements"  << endl;
-
         // Quantidade de nós a produzer. Demanda do cliente.
         int value = msg->getData();
 
@@ -449,25 +447,17 @@ void ServerApp::process_message(GenericAppMsg *msg)
     }
     case SUPPLIER:
     {
-
-        std::cout << "SERVER <- SUPPLIER";
-
         // Valor -1 indica início de comunicação; Valor diferente indica fornecimento de material
         int value = msg->getData();
 
-        std::cout << ": value: " << value ;
-
         if(value == -1)
         {
-            std::cout << endl;
-
             // Solicita do fornecedor matéria prima
             if(product_demmand > product_inventory)
                 msg->setData(product_demmand);
         }
         else
         {
-            std::cout << " more " << value << " elements." << endl;
             product_inventory += value;
         }
 
